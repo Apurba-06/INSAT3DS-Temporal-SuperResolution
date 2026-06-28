@@ -1,0 +1,56 @@
+# config.yaml — PS12 · ISRO BAH 2026
+# Temporal Super-Resolution: INSAT-3DS TIR1 30-min → 15-min / 7.5-min
+
+# ── Model ─────────────────────────────────────────────────────────
+model:
+  name:             TemporalInterpolationNet
+  hidden_channels:  64          # feature width in flow net and synthesizer
+  flow_iterations:  4           # RAFT GRU refinement iterations
+  unet_scales:      5           # U-Net encoder depth levels
+
+# ── Training ──────────────────────────────────────────────────────
+train:
+  epochs:           100
+  batch_size:       8
+  lr:               1.0e-4
+  lr_schedule:      CosineAnnealingLR
+  lr_min:           1.0e-6
+  loss_l1:          0.84        # weight for L1 reconstruction loss
+  loss_ssim:        0.12        # weight for SSIM perceptual loss
+  loss_perceptual:  0.04        # weight for VGG perceptual loss
+  patch_size:       256         # spatial crop size (pixels)
+  seed:             42
+  grad_clip:        1.0         # max gradient norm
+
+# ── Data ──────────────────────────────────────────────────────────
+data:
+  # GOES-19 ABI Channel 13 — 11.2 µm TIR (training ground truth)
+  # Download: https://noaa-goes19.s3.amazonaws.com/ABI-L1b-RadC/
+  train_root:     /data/GOES19/ABI-L1b-RadC/
+
+  # INSAT-3DS TIR1 — 10.2-11.2 µm (primary inference target)
+  # Download: https://mosdac.gov.in  (3SIMG_*_TIR1*.h5)
+  insat_root:     /data/INSAT3DS/TIR1/
+
+  val_split:      0.05          # fraction of training data for validation
+  bt_min:         180.0         # brightness temperature normalisation min (K)
+  bt_max:         320.0         # brightness temperature normalisation max (K)
+
+# ── Output ────────────────────────────────────────────────────────
+output:
+  dir:            ./outputs/synthetic_frames/
+  checkpoint_dir: ./checkpoints/
+  log_dir:        ./logs/
+
+# ── Inference ─────────────────────────────────────────────────────
+inference:
+  # t=0.5 → 1 frame between each 30-min pair (15-min cadence)
+  # t=[0.25, 0.5, 0.75] → 3 frames (7.5-min effective cadence)
+  t_factors:      [0.5]
+  batch_size:     1
+
+# ── Dashboard ─────────────────────────────────────────────────────
+dashboard:
+  port:           8050
+  host:           0.0.0.0
+  debug:          false
