@@ -1,0 +1,32 @@
+# requirements.txt — PS12 · ISRO BAH 2026
+# Install: pip install -r requirements.txt
+# Python ≥ 3.10 recommended
+
+# ── Deep learning ─────────────────────────────────────────────────
+torch>=2.1.0
+torchvision>=0.16.0
+
+# ── Satellite data I/O ────────────────────────────────────────────
+netCDF4>=1.6.4          # GOES-19 .nc files
+h5py>=3.9.0             # INSAT-3DS .h5 files
+satpy>=0.45.0           # Satellite imagery processing (PyTroll)
+pyresample>=1.28.0      # Reprojection between satellite grids
+trollimage>=1.22.0      # Image handling in PyTroll ecosystem
+boto3>=1.28.0           # AWS S3 access for GOES-19 public bucket
+
+# ── Numerical / scientific ────────────────────────────────────────
+numpy>=1.26.0
+scipy>=1.11.0           # gaussian_filter for SSIM, signal processing
+scikit-image>=0.21.0    # Reference SSIM/PSNR for cross-validation
+
+# ── Dashboard / visualisation ─────────────────────────────────────
+dash>=2.14.0            # Plotly Dash web dashboard framework
+plotly>=5.17.0          # Interactive charts
+flask>=3.0.0            # Underlying web server
+
+# ── Utilities ─────────────────────────────────────────────────────
+tqdm>=4.66.0            # Progress bars
+pyyaml>=6.0.1           # config.yaml parsing
+matplotlib>=3.8.0       # Metric plots
+Pillow>=10.0.0          # Image I/O
+tensorboard>=2.14.0     # Training curve logging
