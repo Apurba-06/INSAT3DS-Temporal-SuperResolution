@@ -5,6 +5,19 @@
 
 ---
 
+## 🛰 Live Interactive Dashboard
+
+> **[▶ Open Dashboard](https://claude.site/artifacts/8cb0d3e2-d3d6-4b5e-9c9e-02c99b1b9562)** — fully interactive, runs in browser, no install needed.
+
+The dashboard includes:
+- **Side-by-side viewer** — original 30-min INSAT-3DS frames vs. AI-interpolated 15-min frames, animated
+- **Optical flow tab** — live vector field showing cloud motion estimated by the model
+- **Training curves** — loss, SSIM, PSNR, learning rate over 100 epochs
+- **Source code browser** — all project files with syntax highlighting, in-browser
+- **Config panel** — full hyperparameter table
+
+---
+
 ## Project structure
 
 ```
@@ -75,8 +88,11 @@ python backend/infer.py --config config.yaml --t-factors 0.25 0.5 0.75
 
 ### 7. Open the dashboard
 ```bash
-# Just open in a browser — no server needed
+# Option A: open frontend/index.html directly in any browser (no server needed)
 open frontend/index.html
+
+# Option B: use the hosted version
+# https://claude.site/artifacts/8cb0d3e2-d3d6-4b5e-9c9e-02c99b1b9562
 ```
 
 ---
@@ -130,7 +146,7 @@ L = 0.84 × L1 + 0.12 × (1 - SSIM) + 0.04 × Perceptual
 | Projection      | GOES-East FD       | Indian region      |
 | Data format     | NetCDF4 (.nc)      | HDF5 (.h5)         |
 
-The model is trained on GOES-19 (abundant 10-min ground truth) and fine-tuned / applied to INSAT-3DS.  The spectral overlap (both TIR ~11 µm) makes domain transfer viable; spatial resolution difference is handled by working in pixel space after normalisation.
+The model is trained on GOES-19 (abundant 10-min ground truth) and fine-tuned / applied to INSAT-3DS. The spectral overlap (both TIR ~11 µm) makes domain transfer viable; spatial resolution difference is handled by working in pixel space after normalisation.
 
 ---
 
