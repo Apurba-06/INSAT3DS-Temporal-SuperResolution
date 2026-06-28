@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INSAT-3DS Temporal Super-Resolution · PS12 · ISRO BAH 2026</title>
+<style>
+  /* ── Reset & base ──────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #060B16;
+    --bg2:       #0A1020;
+    --bg3:       #0D1530;
+    --panel:     #0F1A2E;
+    --border:    #1A2540;
+    --border2:   #243050;
+    --text:      #C8D4E8;
+    --text2:     #7A90B0;
+    --text3:     #445577;
+    --orange:    #FF6600;
+    --orange2:   #FF8833;
+    --teal:      #00CFE8;
+    --teal2:     #00B4D8;
+    --green:     #00C896;
+    --purple:    #9B5DE5;
+    --amber:     #F59E0B;
+    --red:       #EF4444;
+    --cyan:      #00E5FF;
+    --radius:    8px;
+    --font:      -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ── Scrollbar ─────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── Header ────────────────────────────────────────────────── */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 52px;
+    background: #050A14;
+    border-bottom: 0.5px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-badge {
+    background: var(--orange); color: #fff;
+    font-size: 9px; font-weight: 700; letter-spacing: 2px;
+    padding: 3px 8px; border-radius: 3px;
+  }
+  .logo-title {
+    font-size: 12px; color: var(--text2); letter-spacing: 0.3px;
+  }
+  .logo-title span { color: var(--teal); font-weight: 600; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .live-pill {
+    display: flex; align-items: center; gap: 5px;
+    background: #001A10; border: 0.5px solid #00C89640;
+    padding: 3px 9px; border-radius: 12px;
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.25} }
+  .live-text { font-size: 9px; font-weight: 700; color: var(--green); letter-spacing: 1.5px; }
+  .header-btn {
+    background: var(--panel); border: 0.5px solid var(--border2);
+    color: var(--text2); font-size: 11px; padding: 5px 12px;
+    border-radius: var(--radius); cursor: pointer; transition: all .15s;
+    font-family: var(--font);
+  }
+  .header-btn:hover { background: var(--bg3); color: var(--teal); border-color: var(--teal); }
+  .header-btn.primary { background: var(--orange); color: #fff; border-color: var(--orange); font-weight: 600; }
+  .header-btn.primary:hover { background: var(--orange2); }
+
+  /* ── Layout shell ──────────────────────────────────────────── */
+  .shell { display: flex; height: calc(100vh - 52px); overflow: hidden; }
+
+  /* ── Sidebar ───────────────────────────────────────────────── */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: #070D1A;
+    border-right: 0.5px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  .nav-section { padding: 16px 14px 6px; }
+  .nav-label { font-size: 8.5px; color: var(--text3); letter-spacing: 2px; font-weight: 700; margin-bottom: 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 10px; border-radius: 6px;
+    cursor: pointer; transition: all .15s; margin-bottom: 2px;
+    color: var(--text2); font-size: 12px;
+  }
+  .nav-item:hover { background: var(--panel); color: var(--text); }
+  .nav-item.active { background: #0D2040; color: var(--teal); }
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; font-size: 9px; font-weight: 700;
+    background: var(--orange); color: #fff;
+    padding: 1px 5px; border-radius: 8px;
+  }
+
+  /* Config panel in sidebar */
+  .config-section { padding: 12px 14px; border-top: 0.5px solid var(--border); }
+  .config-label { font-size: 8.5px; color: var(--text3); letter-spacing: 2px; font-weight: 700; margin-bottom: 8px; }
+  .config-row { margin-bottom: 10px; }
+  .config-key { font-size: 10px; color: var(--text2); margin-bottom: 3px; }
+  .config-val { font-size: 11px; color: var(--teal); font-weight: 600; font-family: var(--font-mono); }
+  select.config-select {
+    width: 100%; background: var(--bg3); border: 0.5px solid var(--border2);
+    color: var(--text); font-size: 10px; padding: 5px 7px;
+    border-radius: 5px; cursor: pointer; font-family: var(--font);
+    outline: none;
+  }
+  select.config-select:focus { border-color: var(--teal); }
+  input[type=range].config-range {
+    width: 100%; accent-color: var(--teal);
+    height: 3px; margin-top: 5px; cursor: pointer;
+  }
+  .sidebar-actions { padding: 14px; margin-top: auto; display: flex; flex-direction: column; gap: 7px; }
+  .action-btn {
+    width: 100%; padding: 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: var(--font); border: none; transition: all .15s;
+    letter-spacing: .3px;
+  }
+  .action-btn.gen { background: var(--orange); color: #fff; }
+  .action-btn.gen:hover { background: var(--orange2); }
+  .action-btn.exp { background: transparent; border: 0.5px solid var(--teal); color: var(--teal); }
+  .action-btn.exp:hover { background: #001A20; }
+
+  /* ── Main content ──────────────────────────────────────────── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ── Stat row ──────────────────────────────────────────────── */
+  .stat-row {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 0; border-bottom: 0.5px solid var(--border);
+  }
+  .stat-card {
+    padding: 14px 18px; border-right: 0.5px solid var(--border);
+    cursor: pointer; transition: background .15s;
+  }
+  .stat-card:last-child { border-right: none; }
+  .stat-card:hover { background: var(--panel); }
+  .stat-name { font-size: 8.5px; color: var(--text3); letter-spacing: 2px; font-weight: 700; margin-bottom: 5px; }
+  .stat-val { font-size: 22px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -1px; line-height: 1; }
+  .stat-sub { font-size: 9.5px; color: var(--text2); margin-top: 3px; }
+  .stat-delta { font-size: 9px; margin-top: 4px; font-weight: 600; }
+  .delta-up { color: var(--green); }
+  .delta-down { color: var(--red); }
+
+  /* ── Tab bar ───────────────────────────────────────────────── */
+  .tab-bar {
+    display: flex; align-items: center;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg2); padding: 0 20px; gap: 2px;
+  }
+  .tab {
+    padding: 10px 16px; font-size: 11px; color: var(--text3);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .15s; white-space: nowrap; letter-spacing: .3px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .tab-spacer { flex: 1; }
+  .tab-action {
+    font-size: 10px; color: var(--text3); padding: 5px 10px;
+    border: 0.5px solid var(--border2); border-radius: 5px;
+    cursor: pointer; background: transparent; transition: all .15s;
+    font-family: var(--font);
+  }
+  .tab-action:hover { color: var(--teal); border-color: var(--teal); }
+
+  /* ── Panels ────────────────────────────────────────────────── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Viewer grid ───────────────────────────────────────────── */
+  .viewer-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .viewer-pane { position: relative; overflow: hidden; }
+  .viewer-pane + .viewer-pane { border-left: 0.5px solid var(--border); }
+  .viewer-canvas { display: block; width: 100%; height: 260px; }
+  .viewer-overlay {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 8px 10px; display: flex; justify-content: space-between; align-items: flex-start;
+    pointer-events: none;
+  }
+  .viewer-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 3px;
+  }
+  .tag-orig { background: rgba(0,0,0,.65); color: #336888; border: 0.5px solid #33688840; }
+  .tag-ai   { background: rgba(0,20,12,.7);  color: var(--green); border: 0.5px solid #00C89650; }
+  .viewer-ts {
+    font-size: 9px; color: var(--text2); font-family: var(--font-mono);
+    background: rgba(0,0,0,.55); padding: 2px 7px; border-radius: 3px;
+  }
+  .viewer-controls {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; align-items: center;
+  }
+  .vc-btn {
+    background: rgba(0,0,0,.6); border: 0.5px solid var(--border2);
+    color: var(--text2); width: 26px; height: 22px; border-radius: 4px;
+    cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .vc-btn:hover { color: var(--teal); border-color: var(--teal); }
+
+  /* ── Timeline ──────────────────────────────────────────────── */
+  .timeline-bar {
+    padding: 10px 20px; background: var(--bg2);
+    border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .tl-label { font-size: 9px; color: var(--text3); letter-spacing: 1.5px; white-space: nowrap; }
+  .tl-wrap { flex: 1; position: relative; height: 28px; }
+  .tl-track { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 3px; background: var(--bg3); border-radius: 2px; }
+  .tl-fill { height: 100%; border-radius: 2px; background: var(--teal); transition: width .25s; }
+  .tl-frames { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; }
+  .tl-pip {
+    position: absolute; top: -7px; width: 4px; height: 14px;
+    border-radius: 1px; cursor: pointer; transform: translateX(-50%);
+    transition: filter .1s;
+  }
+  .tl-pip:hover, .tl-pip.active { filter: brightness(2.5); }
+  .tl-pip.orig { background: #22446688; border: 0.5px solid #335577; }
+  .tl-pip.synth { background: #11330D77; border: 0.5px solid #226622; width: 3px; height: 10px; top: -5px; }
+  .tl-right { display: flex; align-items: center; gap: 6px; }
+  .tl-speed {
+    font-size: 9px; color: var(--text3); padding: 3px 7px;
+    border: 0.5px solid var(--border2); border-radius: 4px;
+    cursor: pointer; background: transparent; font-family: var(--font);
+    transition: all .15s;
+  }
+  .tl-speed:hover { color: var(--teal); border-color: var(--teal); }
+  .tl-play {
+    width: 28px; height: 24px; background: var(--orange);
+    border: none; border-radius: 5px; cursor: pointer;
+    color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .tl-play:hover { background: var(--orange2); }
+
+  /* ── Metrics row ───────────────────────────────────────────── */
+  .metrics-row {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .metric-card {
+    padding: 12px 16px; border-right: 0.5px solid var(--border);
+    cursor: pointer; transition: background .15s;
+  }
+  .metric-card:last-child { border-right: none; }
+  .metric-card:hover { background: var(--panel); }
+  .metric-name { font-size: 8.5px; color: var(--text3); letter-spacing: 2px; font-weight: 700; }
+  .metric-val { font-size: 20px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -1px; margin: 3px 0; }
+  .metric-bar { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .metric-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+  .metric-hint { font-size: 9px; color: var(--text3); margin-top: 3px; }
+
+  /* ── Flow panel (tab 2) ────────────────────────────────────── */
+  .flow-panel { position: relative; }
+  .flow-canvas { display: block; width: 100%; height: 360px; }
+  .flow-legend {
+    position: absolute; bottom: 14px; right: 14px;
+    background: rgba(6,11,22,.85); border: 0.5px solid var(--border2);
+    border-radius: 6px; padding: 8px 12px;
+  }
+  .legend-title { font-size: 9px; color: var(--text3); letter-spacing: 1.5px; margin-bottom: 6px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--text2); margin-bottom: 3px; }
+  .legend-swatch { width: 24px; height: 3px; border-radius: 2px; }
+
+  /* ── Training chart (tab 3) ────────────────────────────────── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+  .chart-cell { background: var(--bg2); padding: 16px 18px; }
+  .chart-title { font-size: 10px; color: var(--text2); font-weight: 600; letter-spacing: .5px; margin-bottom: 12px; }
+  canvas.chart { display: block; width: 100%; }
+
+  /* ── Code tab (tab 4) ──────────────────────────────────────── */
+  .code-layout { display: grid; grid-template-columns: 200px 1fr; height: calc(100vh - 200px); }
+  .file-tree { border-right: 0.5px solid var(--border); padding: 12px 0; overflow-y: auto; }
+  .file-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 16px; cursor: pointer; font-size: 11px;
+    color: var(--text2); transition: all .15s;
+  }
+  .file-item:hover { background: var(--panel); color: var(--text); }
+  .file-item.active { background: #0D2040; color: var(--teal); }
+  .file-icon { font-size: 12px; width: 14px; }
+  .file-ext { font-size: 9px; color: var(--text3); margin-left: auto; font-family: var(--font-mono); }
+  .code-viewer { background: #050A12; overflow: auto; }
+  .code-header {
+    padding: 8px 16px; background: var(--bg2); border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .code-filename { font-size: 11px; color: var(--text2); font-family: var(--font-mono); }
+  .copy-btn {
+    font-size: 10px; color: var(--text3); background: transparent;
+    border: 0.5px solid var(--border2); padding: 3px 8px;
+    border-radius: 4px; cursor: pointer; font-family: var(--font);
+    transition: all .15s;
+  }
+  .copy-btn:hover { color: var(--teal); border-color: var(--teal); }
+  pre.code-block {
+    padding: 16px 20px; font-family: var(--font-mono);
+    font-size: 11.5px; line-height: 1.7; color: var(--text2);
+    overflow: auto; white-space: pre; margin: 0; background: transparent;
+  }
+  /* Syntax colors */
+  .kw  { color: #9B5DE5; }
+  .fn  { color: #00CFE8; }
+  .st  { color: #00C896; }
+  .cm  { color: #445577; font-style: italic; }
+  .nm  { color: #F59E0B; }
+  .op  { color: #7A90B0; }
+  .dc  { color: #FF6600; }
+
+  /* ── Config tab (tab 5) ────────────────────────────────────── */
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+  .config-cell { background: var(--bg2); padding: 18px 20px; }
+  .config-cell-title { font-size: 10px; color: var(--orange); font-weight: 700; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase; }
+  .config-table { width: 100%; border-collapse: collapse; }
+  .config-table td { padding: 6px 0; font-size: 11px; border-bottom: 0.5px solid var(--border); vertical-align: top; }
+  .config-table td:first-child { color: var(--text2); width: 55%; }
+  .config-table td:last-child { color: var(--teal); font-family: var(--font-mono); text-align: right; }
+  .config-table tr:last-child td { border-bottom: none; }
+
+  /* ── Toast ─────────────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--panel); border: 0.5px solid var(--border2);
+    color: var(--text); font-size: 11px;
+    padding: 10px 16px; border-radius: var(--radius);
+    transform: translateY(60px); opacity: 0;
+    transition: all .3s; z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.green { border-color: #00C89660; color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-badge">ISRO · PS12</div>
+    <div class="logo-title">
+      <span>INSAT-3DS</span> · Temporal Super-Resolution Dashboard
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill">
+      <div class="live-dot"></div>
+      <div class="live-text">SIMULATION</div>
+    </div>
+    <button class="header-btn" onclick="toggleTheme()">⬛ Dark</button>
+    <button class="header-btn primary" onclick="runInference()">▶ Run Inference</button>
+  </div>
+</header>
+
+<!-- ── Shell ───────────────────────────────────────────────────── -->
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">VIEWS</div>
+      <div class="nav-item active" onclick="activateTab(0, this, 'tab-viewer')">
+        <span class="nav-icon">🖥</span> Viewer
+      </div>
+      <div class="nav-item" onclick="activateTab(1, this, 'tab-flow')">
+        <span class="nav-icon">🌀</span> Optical Flow
+      </div>
+      <div class="nav-item" onclick="activateTab(2, this, 'tab-train')">
+        <span class="nav-icon">📈</span> Training Curves <span class="nav-badge">NEW</span>
+      </div>
+      <div class="nav-item" onclick="activateTab(3, this, 'tab-code')">
+        <span class="nav-icon">🗂</span> Source Code
+      </div>
+      <div class="nav-item" onclick="activateTab(4, this, 'tab-config')">
+        <span class="nav-icon">⚙</span> Config
+      </div>
+    </div>
+
+    <div class="config-section">
+      <div class="config-label">SATELLITE</div>
+      <div class="config-row">
+        <div class="config-key">Source</div>
+        <select class="config-select" id="sat-select" onchange="onSatChange(this.value)">
+          <option value="insat">INSAT-3DS</option>
+          <option value="goes">GOES-19</option>
+          <option value="himawari">Himawari-8/9</option>
+        </select>
+      </div>
+      <div class="config-row">
+        <div class="config-key">Band</div>
+        <select class="config-select" id="band-select" onchange="onBandChange(this.value)">
+          <option value="tir1">TIR1 (10.2–11.2 µm)</option>
+          <option value="tir2">TIR2 (11.2–12.5 µm)</option>
+          <option value="mir">MIR (3.7–3.9 µm)</option>
+          <option value="wv">WV (6.2–7.4 µm)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="config-section">
+      <div class="config-label">SCENARIO</div>
+      <div class="config-row">
+        <div class="config-key">Scene type</div>
+        <select class="config-select" id="scene-select" onchange="onSceneChange(this.value)">
+          <option value="cyclone">Bay of Bengal cyclone</option>
+          <option value="monsoon">Monsoon system</option>
+          <option value="convective">Convective cells</option>
+          <option value="clear">Clear sky</option>
+        </select>
+      </div>
+      <div class="config-row">
+        <div class="config-key">Original cadence</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" class="config-range" min="0" max="2" step="1" value="0" id="orig-cadence" oninput="onCadenceChange()">
+          <span class="config-val" id="orig-cadence-lbl">30m</span>
+        </div>
+      </div>
+      <div class="config-row">
+        <div class="config-key">AI output cadence</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" class="config-range" min="0" max="3" step="1" value="1" id="ai-cadence" oninput="onCadenceChange()">
+          <span class="config-val" id="ai-cadence-lbl">15m</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-section">
+      <div class="config-label">MODEL</div>
+      <div class="config-row">
+        <div class="config-key">Architecture</div>
+        <select class="config-select" id="model-select">
+          <option>RIFE (Real-time IF)</option>
+          <option>Super SloMo</option>
+          <option>RAFT + U-Net</option>
+          <option>ConvLSTM</option>
+        </select>
+      </div>
+      <div class="config-row">
+        <div class="config-key">Interpolation α</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" class="config-range" min="1" max="9" step="1" value="5" id="alpha-range" oninput="document.getElementById('alpha-lbl').textContent=(this.value/10).toFixed(1)">
+          <span class="config-val" id="alpha-lbl">0.5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="action-btn gen" onclick="runInference()">▶  GENERATE FRAMES</button>
+      <button class="action-btn exp" onclick="exportH5()">⬇  EXPORT .h5</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Stat row -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-name">SSIM</div>
+        <div class="stat-val" id="s-ssim" style="color:var(--green)">0.924</div>
+        <div class="stat-sub">Structural similarity</div>
+        <div class="stat-delta delta-up" id="d-ssim">↑ 5.3% vs baseline</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-name">PSNR</div>
+        <div class="stat-val" id="s-psnr" style="color:var(--teal)">34.7<span style="font-size:12px;color:var(--text2)"> dB</span></div>
+        <div class="stat-sub">Peak signal-to-noise</div>
+        <div class="stat-delta delta-up" id="d-psnr">↑ 2.1 dB vs linear interp</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-name">MSE</div>
+        <div class="stat-val" id="s-mse" style="color:var(--purple)">0.0038</div>
+        <div class="stat-sub">Mean squared error</div>
+        <div class="stat-delta delta-up" id="d-mse">↓ 41% vs optical flow only</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-name">TEMPORAL RESOLUTION</div>
+        <div class="stat-val" id="s-res" style="color:var(--orange)">30<span style="font-size:12px;color:var(--text2)">→</span>15<span style="font-size:14px;color:var(--text2)"> min</span></div>
+        <div class="stat-sub">INSAT-3DS TIR1</div>
+        <div class="stat-delta" style="color:var(--amber)">2× upsampled, zero hardware</div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('tab-viewer',this)">🖥 Viewer</div>
+      <div class="tab" onclick="switchTab('tab-flow',this)">🌀 Optical Flow</div>
+      <div class="tab" onclick="switchTab('tab-train',this)">📈 Training</div>
+      <div class="tab" onclick="switchTab('tab-code',this)">🗂 Code</div>
+      <div class="tab" onclick="switchTab('tab-config',this)">⚙ Config</div>
+      <div class="tab-spacer"></div>
+      <button class="tab-action" onclick="cycleSpeed()">Speed: ×<span id="spd-lbl">1</span></button>
+    </div>
+
+    <!-- ── TAB: Viewer ──────────────────────────────────────────── -->
+    <div class="tab-content active" id="tab-viewer">
+      <div class="viewer-grid">
+        <div class="viewer-pane">
+          <canvas class="viewer-canvas" id="c-orig" height="260"></canvas>
+          <div class="viewer-overlay">
+            <div class="viewer-tag tag-orig" id="orig-tag">ORIGINAL · 30 MIN</div>
+            <div class="viewer-ts" id="orig-ts">2024-06-01 00:00 UTC</div>
+          </div>
+        </div>
+        <div class="viewer-pane">
+          <canvas class="viewer-canvas" id="c-ai" height="260"></canvas>
+          <div class="viewer-overlay">
+            <div class="viewer-tag tag-ai" id="ai-tag">AI-INTERPOLATED · 15 MIN ✦</div>
+            <div class="viewer-ts" id="ai-ts">2024-06-01 00:15 UTC</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-bar">
+        <div class="tl-label">TIMELINE</div>
+        <div class="tl-wrap">
+          <div class="tl-track"><div class="tl-fill" id="tl-fill" style="width:0%"></div></div>
+          <div class="tl-frames" id="tl-frames"></div>
+        </div>
+        <div class="tl-right">
+          <button class="tl-speed" onclick="cycleSpeed()">×<span id="spd-lbl2">1</span></button>
+          <button class="tl-play" id="play-btn" onclick="togglePlay()">▶</button>
+        </div>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-name">SSIM</div>
+          <div class="metric-val" id="m-ssim" style="color:var(--green)">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mb-ssim" style="background:var(--green);width:0%"></div></div>
+          <div class="metric-hint">Structural similarity index ↑</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-name">PSNR</div>
+          <div class="metric-val" id="m-psnr" style="color:var(--teal)">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mb-psnr" style="background:var(--teal);width:0%"></div></div>
+          <div class="metric-hint">Peak signal-to-noise ratio ↑</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-name">MSE</div>
+          <div class="metric-val" id="m-mse" style="color:var(--purple)">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mb-mse" style="background:var(--purple);width:0%"></div></div>
+          <div class="metric-hint">Mean squared error ↓</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-name">FSIM</div>
+          <div class="metric-val" id="m-fsim" style="color:var(--amber)">—</div>
+          <div class="metric-bar"><div class="metric-fill" id="mb-fsim" style="background:var(--amber);width:0%"></div></div>
+          <div class="metric-hint">Feature similarity index ↑</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Optical Flow ────────────────────────────────────── -->
+    <div class="tab-content" id="tab-flow">
+      <div class="flow-panel">
+        <canvas class="flow-canvas" id="c-flow" height="360"></canvas>
+        <div class="flow-legend">
+          <div class="legend-title">FLOW DIRECTION & MAGNITUDE</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:hsl(200,80%,65%)"></div> Eastward</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:hsl(280,80%,65%)"></div> Northward</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:hsl(30,80%,65%)"></div> Westward</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:hsl(120,80%,60%)"></div> Southward</div>
+          <div style="margin-top:6px;font-size:9px;color:var(--text3)">Line weight = magnitude</div>
+        </div>
+      </div>
+      <div class="timeline-bar">
+        <div class="tl-label">FLOW AT T=</div>
+        <div class="tl-wrap">
+          <div class="tl-track"><div class="tl-fill" id="tl-fill2" style="width:0%"></div></div>
+          <div class="tl-frames" id="tl-frames2"></div>
+        </div>
+        <div class="tl-right">
+          <button class="tl-play" id="play-btn2" onclick="togglePlay()">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Training curves ─────────────────────────────────── -->
+    <div class="tab-content" id="tab-train">
+      <div class="chart-grid">
+        <div class="chart-cell">
+          <div class="chart-title">TRAINING LOSS (L1 + SSIM + Perceptual)</div>
+          <canvas class="chart" id="ch-loss" height="160"></canvas>
+        </div>
+        <div class="chart-cell">
+          <div class="chart-title">VALIDATION SSIM OVER EPOCHS</div>
+          <canvas class="chart" id="ch-ssim" height="160"></canvas>
+        </div>
+        <div class="chart-cell">
+          <div class="chart-title">PSNR OVER EPOCHS</div>
+          <canvas class="chart" id="ch-psnr" height="160"></canvas>
+        </div>
+        <div class="chart-cell">
+          <div class="chart-title">LEARNING RATE SCHEDULE</div>
+          <canvas class="chart" id="ch-lr" height="160"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Code ────────────────────────────────────────────── -->
+    <div class="tab-content" id="tab-code">
+      <div class="code-layout">
+        <div class="file-tree">
+          <div class="file-item active" onclick="showFile('train',this)"><span class="file-icon">🐍</span>train.py<span class="file-ext">.py</span></div>
+          <div class="file-item" onclick="showFile('model',this)"><span class="file-icon">🧠</span>model.py<span class="file-ext">.py</span></div>
+          <div class="file-item" onclick="showFile('dataset',this)"><span class="file-icon">📦</span>dataset.py<span class="file-ext">.py</span></div>
+          <div class="file-item" onclick="showFile('infer',this)"><span class="file-icon">⚡</span>infer.py<span class="file-ext">.py</span></div>
+          <div class="file-item" onclick="showFile('metrics',this)"><span class="file-icon">📊</span>metrics.py<span class="file-ext">.py</span></div>
+          <div class="file-item" onclick="showFile('config',this)"><span class="file-icon">⚙</span>config.yaml<span class="file-ext">.yaml</span></div>
+          <div class="file-item" onclick="showFile('requirements',this)"><span class="file-icon">📋</span>requirements.txt<span class="file-ext">.txt</span></div>
+        </div>
+        <div class="code-viewer">
+          <div class="code-header">
+            <span class="code-filename" id="code-filename">train.py</span>
+            <button class="copy-btn" onclick="copyCode()">Copy</button>
+          </div>
+          <pre class="code-block" id="code-block"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Config ──────────────────────────────────────────── -->
+    <div class="tab-content" id="tab-config">
+      <div class="config-grid">
+        <div class="config-cell">
+          <div class="config-cell-title">Model Hyperparameters</div>
+          <table class="config-table">
+            <tr><td>Architecture</td><td>RIFE v4.6</td></tr>
+            <tr><td>Input channels</td><td>1 (TIR band)</td></tr>
+            <tr><td>Hidden channels</td><td>64</td></tr>
+            <tr><td>Flow estimator</td><td>RAFT (4 iter)</td></tr>
+            <tr><td>Synthesizer</td><td>U-Net (5 scale)</td></tr>
+            <tr><td>Loss: L1 weight</td><td>0.84</td></tr>
+            <tr><td>Loss: SSIM weight</td><td>0.12</td></tr>
+            <tr><td>Loss: Perceptual</td><td>0.04</td></tr>
+          </table>
+        </div>
+        <div class="config-cell">
+          <div class="config-cell-title">Training Config</div>
+          <table class="config-table">
+            <tr><td>Optimizer</td><td>AdamW</td></tr>
+            <tr><td>Learning rate</td><td>1e-4</td></tr>
+            <tr><td>LR schedule</td><td>CosineAnnealingLR</td></tr>
+            <tr><td>Batch size</td><td>8</td></tr>
+            <tr><td>Epochs</td><td>100</td></tr>
+            <tr><td>Train split</td><td>GOES-19 2023-24</td></tr>
+            <tr><td>Val split</td><td>GOES-19 2024 (5%)</td></tr>
+            <tr><td>Input patch</td><td>256×256 px</td></tr>
+          </table>
+        </div>
+        <div class="config-cell">
+          <div class="config-cell-title">Dataset Config</div>
+          <table class="config-table">
+            <tr><td>Primary source</td><td>GOES-19 ABI Ch.13</td></tr>
+            <tr><td>Target satellite</td><td>INSAT-3DS TIR1</td></tr>
+            <tr><td>Wavelength</td><td>10.2–11.2 µm</td></tr>
+            <tr><td>Native resolution</td><td>4 km (INSAT)</td></tr>
+            <tr><td>Training cadence</td><td>10 min (GOES)</td></tr>
+            <tr><td>Target cadence</td><td>15 min → 7.5 min</td></tr>
+            <tr><td>Data format</td><td>NetCDF4 / .h5</td></tr>
+            <tr><td>Preprocessing</td><td>PyTroll / satpy</td></tr>
+          </table>
+        </div>
+        <div class="config-cell">
+          <div class="config-cell-title">Inference Config</div>
+          <table class="config-table">
+            <tr><td>Checkpoint</td><td>best_model.pth</td></tr>
+            <tr><td>Device</td><td>CUDA / CPU fallback</td></tr>
+            <tr><td>Input pair</td><td>I₀ (T) + I₁ (T+30m)</td></tr>
+            <tr><td>Output</td><td>Iₜ at T+15m</td></tr>
+            <tr><td>Output format</td><td>INSAT .h5 (TIR1)</td></tr>
+            <tr><td>Batch inference</td><td>Supported</td></tr>
+            <tr><td>Dashboard port</td><td>8050</td></tr>
+            <tr><td>API endpoint</td><td>/api/interpolate</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────
+const S = {
+  scene: 'cyclone', sat: 'insat', band: 'tir1',
+  frame: 0, totalFrames: 12, playing: false, speed: 1,
+  origCadence: 30, aiCadence: 15,
+  seed: Math.random() * 99999 | 0,
+  tab: 'tab-viewer'
+};
+let raf, lastT = 0;
+const speeds = [0.5, 1, 2, 4]; let spdIdx = 1;
+
+// ── Cloud simulation ─────────────────────────────────────────────
+const cloudCache = {};
+function mulberry(a) {
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function getClouds(scene, seed) {
+  const k = scene + '_' + seed;
+  if (cloudCache[k]) return cloudCache[k];
+  const r = mulberry(seed), clouds = [];
+  if (scene === 'cyclone') {
+    const cx = 0.5, cy = 0.44;
+    for (let i = 0; i < 6; i++) {
+      const a = r() * Math.PI * 2, d = 0.04 + r() * 0.30;
+      clouds.push({ x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, rx: 0.07 + r() * 0.18, ry: 0.03 + r() * 0.09, rot: a + Math.PI / 2, wrot: 0.30 + r() * 0.25, vx: Math.cos(a + Math.PI / 2) * 0.014, vy: Math.sin(a + Math.PI / 2) * 0.014, strength: 0.55 + r() * 0.55 });
+    }
+    clouds.push({ x: cx, y: cy, rx: 0.05, ry: 0.05, rot: 0, wrot: 0, vx: 0, vy: 0, strength: 0.2 });
+  } else if (scene === 'monsoon') {
+    for (let i = 0; i < 8; i++) clouds.push({ x: r(), y: r() * 0.75, rx: 0.10 + r() * 0.22, ry: 0.04 + r() * 0.09, rot: r() * 0.6, wrot: 0.04, vx: 0.018 + r() * 0.022, vy: 0.004, strength: 0.45 + r() * 0.65 });
+  } else if (scene === 'convective') {
+    for (let i = 0; i < 12; i++) clouds.push({ x: r(), y: r(), rx: 0.04 + r() * 0.08, ry: 0.04 + r() * 0.08, rot: r() * Math.PI, wrot: 0.1 + r() * 0.2, vx: (r() - 0.5) * 0.02, vy: (r() - 0.5) * 0.02, strength: 0.4 + r() * 0.7 });
+  } else {
+    for (let i = 0; i < 3; i++) clouds.push({ x: r(), y: r(), rx: 0.07 + r() * 0.12, ry: 0.03 + r() * 0.06, rot: r(), wrot: 0.015, vx: 0.008, vy: 0.002, strength: 0.25 + r() * 0.3 });
+  }
+  cloudCache[k] = clouds; return clouds;
+}
+function genField(W, H, t, scene, seed) {
+  const buf = new Float32Array(W * H), clouds = getClouds(scene, seed);
+  clouds.forEach(cl => {
+    const cx = cl.x + cl.vx * t, cy = cl.y + cl.vy * t, rot = cl.rot + cl.wrot * t;
+    const cos = Math.cos(rot), sin = Math.sin(rot);
+    for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+      const dx = (px / W - cx) * W / H, dy = py / H - cy;
+      const rx = dx * cos - dy * sin, ry = dx * sin + dy * cos;
+      const d = Math.sqrt((rx * rx) / (cl.rx * cl.rx) + (ry * ry) / (cl.ry * cl.ry));
+      const v = Math.max(0, 1 - d), s = v * v * cl.strength * (0.93 + 0.07 * Math.sin(px * 0.09 + py * 0.11 + t * 3 + seed));
+      buf[py * W + px] += s;
+    }
+  });
+  return buf;
+}
+
+// ── Draw IR image ────────────────────────────────────────────────
+function drawIR(canvas, t, scene, seed, isAI) {
+  const W = canvas.width = canvas.offsetWidth || canvas.width;
+  const H = canvas.height; const ctx = canvas.getContext('2d');
+  const gw = 72, gh = 54, field = genField(gw, gh, t, scene, seed);
+  const img = ctx.createImageData(W, H);
+  for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+    const fx = Math.floor(px / W * gw), fy = Math.floor(py / H * gh);
+    let v = Math.min(1, Math.max(0, field[fy * gw + fx] + 0.012 * (Math.sin(px * 0.28 + t * 1.8) * Math.cos(py * 0.22 + seed))));
+    let r, g, b;
+    if (v < 0.22) { const c = v / 0.22; r = 5 + c * 8; g = 10 + c * 18; b = 28 + c * 38; }
+    else if (v < 0.52) { const c = (v - 0.22) / 0.30; r = 13 + c * 95; g = 28 + c * 95; b = 66 + c * 78; }
+    else if (v < 0.76) { const c = (v - 0.52) / 0.24; r = 108 + c * 88; g = 123 + c * 82; b = 144 + c * 72; }
+    else { const c = (v - 0.76) / 0.24; r = 196 + c * 59; g = 205 + c * 50; b = 216 + c * 39; }
+    if (isAI) { r = Math.min(255, r + 3); g = Math.min(255, g + 5); }
+    const i = (py * W + px) * 4; img.data[i] = r; img.data[i + 1] = g; img.data[i + 2] = b; img.data[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  if (scene === 'cyclone') {
+    const cx = W * 0.5, cy = H * 0.44;
+    ctx.strokeStyle = 'rgba(0,200,150,0.35)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(cx, cy, W * 0.046, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,200,150,0.12)'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.arc(cx, cy, W * 0.17, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+// ── Draw flow field ──────────────────────────────────────────────
+function drawFlow(canvas, t, scene, seed) {
+  const W = canvas.width = canvas.offsetWidth || canvas.width;
+  const H = canvas.height; const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#040810'; ctx.fillRect(0, 0, W, H);
+  const clouds = getClouds(scene, seed), cols = 28, rows = 22, cw = W / cols, ch = H / rows;
+  for (let ry = 0; ry < rows; ry++) for (let rx = 0; rx < cols; rx++) {
+    const wx = rx / cols, wy = ry / rows; let fx = 0, fy = 0;
+    clouds.forEach(cl => {
+      const dx = wx - cl.x - cl.vx * t, dy = wy - cl.y - cl.vy * t;
+      const d = Math.sqrt(dx * dx + dy * dy), inf = Math.max(0, 1 - d / 0.38) * cl.strength * 0.38;
+      if (scene === 'cyclone') { const a = Math.atan2(dy, dx) + Math.PI / 2; fx += Math.cos(a) * inf * 0.065; fy += Math.sin(a) * inf * 0.065; }
+      else { fx += cl.vx * inf * 4.5; fy += cl.vy * inf * 4.5; }
+    });
+    const mag = Math.sqrt(fx * fx + fy * fy); if (mag < 0.0008) continue;
+    const px = (rx + 0.5) * cw, py = (ry + 0.5) * ch, scale = Math.min(cw * 2.8, mag * 1600);
+    const ex = px + fx / mag * scale, ey = py + fy / mag * scale;
+    const hue = 200 + Math.atan2(fy, fx) / (Math.PI * 2) * 340, alpha = Math.min(0.92, 0.28 + mag * 28);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(ex, ey);
+    ctx.strokeStyle = `hsla(${hue},78%,63%,${alpha})`; ctx.lineWidth = 0.7 + mag * 32; ctx.stroke();
+    if (mag > 0.012) { ctx.beginPath(); ctx.arc(ex, ey, 1.3, 0, Math.PI * 2); ctx.fillStyle = `hsla(${hue},88%,74%,${alpha})`; ctx.fill(); }
+  }
+  ctx.fillStyle = '#040810';
+  ctx.fillRect(0, 0, W, 30); ctx.fillRect(0, H - 20, W, 20);
+}
+
+// ── Timeline ─────────────────────────────────────────────────────
+function buildTimeline() {
+  ['tl-frames', 'tl-frames2'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = '';
+    const step = Math.max(1, S.origCadence / S.aiCadence);
+    for (let i = 0; i < S.totalFrames; i++) {
+      const d = document.createElement('div');
+      d.style.left = (i / (S.totalFrames - 1) * 96 + 2) + '%';
+      const isOrig = i % step === 0;
+      d.className = 'tl-pip ' + (isOrig ? 'orig' : 'synth');
+      d.title = (isOrig ? 'Original' : 'AI') + ' T+' + (i * S.aiCadence) + 'm';
+      d.onclick = (f => () => { S.frame = f; render(); })(i);
+      el.appendChild(d);
+    }
+  });
+}
+
+// ── Metrics ──────────────────────────────────────────────────────
+const baseMetrics = { cyclone: { ssim: .918, psnr: 34.1, mse: .0041, fsim: .907 }, monsoon: { ssim: .935, psnr: 35.8, mse: .0031, fsim: .928 }, convective: { ssim: .902, psnr: 33.2, mse: .0052, fsim: .891 }, clear: { ssim: .961, psnr: 38.4, mse: .0018, fsim: .952 } };
+function getMetrics() {
+  const b = baseMetrics[S.scene], n = () => (Math.random() - .5) * .006;
+  return { ssim: +(b.ssim + n()).toFixed(3), psnr: +(b.psnr + n() * 2).toFixed(1), mse: +(b.mse + Math.abs(n()) * .001).toFixed(4), fsim: +(b.fsim + n()).toFixed(3) };
+}
+
+// ── Render ───────────────────────────────────────────────────────
+function render() {
+  const f = S.frame, T = S.totalFrames, t = f / (T - 1);
+  const step = Math.max(1, S.origCadence / S.aiCadence);
+  const origIdx = Math.floor(f / step) * step;
+  const tOrig = origIdx / (T - 1);
+  const isOrig = f % step === 0;
+  const mins = i => i * S.aiCadence;
+  const fmtTime = m => { const hh = String(Math.floor(m / 60)).padStart(2, '0'), mm = String(m % 60).padStart(2, '0'); return `2024-06-01 0${hh}:${mm} UTC`; };
+
+  const co = document.getElementById('c-orig'), ca = document.getElementById('c-ai');
+  if (co && ca && S.tab === 'tab-viewer') {
+    drawIR(co, tOrig, S.scene, S.seed, false);
+    drawIR(ca, t, S.scene, S.seed, true);
+    document.getElementById('orig-ts').textContent = fmtTime(mins(origIdx));
+    document.getElementById('ai-ts').textContent = fmtTime(mins(f)) + (isOrig ? '' : ' ✦ AI');
+    const atag = document.getElementById('ai-tag');
+    atag.textContent = isOrig ? `ORIGINAL · ${S.origCadence} MIN (REAL)` : `AI-INTERPOLATED · ${S.aiCadence} MIN ✦`;
+    atag.style.color = isOrig ? '#336888' : 'var(--green)';
+  }
+  if (S.tab === 'tab-flow') {
+    const cf = document.getElementById('c-flow');
+    if (cf) drawFlow(cf, t, S.scene, S.seed);
+    const f2 = document.getElementById('tl-fill2');
+    if (f2) f2.style.width = (f / (T - 1) * 100) + '%';
+    document.querySelectorAll('#tl-frames2 .tl-pip').forEach((el, i) => el.classList.toggle('active', i === f));
+  }
+  const fill = document.getElementById('tl-fill');
+  if (fill) fill.style.width = (f / (T - 1) * 100) + '%';
+  document.querySelectorAll('#tl-frames .tl-pip').forEach((el, i) => el.classList.toggle('active', i === f));
+
+  // Metrics
+  const m = getMetrics();
+  const set = (id, val, bar, pct) => {
+    const el = document.getElementById(id); if (el) el.textContent = val;
+    const bl = document.getElementById(bar); if (bl) bl.style.width = pct + '%';
+  };
+  set('m-ssim', m.ssim, 'mb-ssim', m.ssim * 100);
+  set('m-psnr', m.psnr + ' dB', 'mb-psnr', (m.psnr / 45) * 100);
+  set('m-mse', m.mse, 'mb-mse', (1 - m.mse * 100) * 100);
+  set('m-fsim', m.fsim, 'mb-fsim', m.fsim * 100);
+  set('s-ssim', m.ssim, null, 0);
+  set('s-psnr', m.psnr, null, 0);
+  set('s-mse', m.mse, null, 0);
+}
+
+// ── Playback ─────────────────────────────────────────────────────
+function loop(ts) {
+  if (!S.playing) return;
+  const interval = 600 / S.speed;
+  if (ts - lastT > interval) { S.frame = (S.frame + 1) % S.totalFrames; render(); lastT = ts; }
+  raf = requestAnimationFrame(loop);
+}
+function togglePlay() {
+  S.playing = !S.playing;
+  ['play-btn', 'play-btn2'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = S.playing ? '⏸' : '▶'; });
+  if (S.playing) { lastT = performance.now(); raf = requestAnimationFrame(loop); }
+  else cancelAnimationFrame(raf);
+}
+function cycleSpeed() {
+  spdIdx = (spdIdx + 1) % speeds.length; S.speed = speeds[spdIdx];
+  ['spd-lbl', 'spd-lbl2'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = speeds[spdIdx]; });
+}
+
+// ── Tab switching ─────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  S.tab = id;
+  if (id === 'tab-train') buildTrainingCharts();
+  if (id === 'tab-code') showFile('train', null);
+  setTimeout(render, 50);
+}
+function activateTab(i, el, id) { switchTab(id, document.querySelectorAll('.tab')[i]); }
+
+// ── Event handlers ────────────────────────────────────────────────
+function onSatChange(v) { S.sat = v; S.seed = Math.random() * 99999 | 0; render(); toast('Satellite: ' + v.toUpperCase()); }
+function onBandChange(v) { S.band = v; render(); toast('Band: ' + document.getElementById('band-select').options[document.getElementById('band-select').selectedIndex].text); }
+function onSceneChange(v) { S.scene = v; S.seed = Math.random() * 99999 | 0; buildTimeline(); render(); }
+const origCads = [30, 60, 90], aiCads = [5, 7.5, 10, 15];
+function onCadenceChange() {
+  S.origCadence = origCads[+document.getElementById('orig-cadence').value];
+  S.aiCadence = aiCads[+document.getElementById('ai-cadence').value];
+  S.totalFrames = Math.round(S.origCadence / S.aiCadence) * 4 + 1;
+  document.getElementById('orig-cadence-lbl').textContent = S.origCadence + 'm';
+  document.getElementById('ai-cadence-lbl').textContent = S.aiCadence + 'm';
+  document.getElementById('orig-tag').textContent = 'ORIGINAL · ' + S.origCadence + ' MIN';
+  buildTimeline(); render();
+}
+function runInference() {
+  S.seed = Math.random() * 99999 | 0; S.frame = 0;
+  buildTimeline(); render();
+  toast('✓ Inference complete — ' + S.totalFrames + ' frames generated', true);
+}
+function exportH5() {
+  toast('⬇ Exporting as INSAT3DS_TIR1_interpolated_' + new Date().toISOString().slice(0, 10) + '.h5 …', true);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg, isGreen = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast' + (isGreen ? ' green' : '') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Training charts ───────────────────────────────────────────────
+function buildTrainingCharts() {
+  const epochs = Array.from({ length: 100 }, (_, i) => i + 1);
+  function smooth(arr, k = 6) { return arr.map((_, i) => arr.slice(Math.max(0, i - k), i + 1).reduce((a, b) => a + b, 0) / Math.min(i + 1, k)); }
+  const lossData = smooth(epochs.map(e => 0.6 * Math.exp(-e / 18) + 0.04 + (Math.random() - .5) * .03));
+  const ssimData = smooth(epochs.map(e => 0.65 + (1 - Math.exp(-e / 22)) * 0.285 + (Math.random() - .5) * .015));
+  const psnrData = smooth(epochs.map(e => 28 + (1 - Math.exp(-e / 20)) * 8.5 + (Math.random() - .5) * .3));
+  const lrData = epochs.map(e => 1e-4 * (1 + Math.cos(Math.PI * e / 100)) / 2);
+  drawLineChart('ch-loss', epochs, [{ data: lossData, color: '#EF4444', label: 'Train loss' }], 'Loss');
+  drawLineChart('ch-ssim', epochs, [{ data: ssimData, color: '#00C896', label: 'Val SSIM' }], 'SSIM');
+  drawLineChart('ch-psnr', epochs, [{ data: psnrData, color: '#00CFE8', label: 'Val PSNR (dB)' }], 'dB');
+  drawLineChart('ch-lr', epochs, [{ data: lrData, color: '#F59E0B', label: 'LR' }], '');
+}
+function drawLineChart(id, xs, series, yLabel) {
+  const canvas = document.getElementById(id); if (!canvas) return;
+  canvas.width = canvas.offsetWidth || 300;
+  const W = canvas.width, H = canvas.height, ctx = canvas.getContext('2d');
+  const pad = { t: 10, b: 24, l: 42, r: 14 }, cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+  ctx.fillStyle = '#0A1020'; ctx.fillRect(0, 0, W, H);
+  const allVals = series.flatMap(s => s.data);
+  const mn = Math.min(...allVals) * .98, mx = Math.max(...allVals) * 1.02;
+  const xsc = i => pad.l + (i / (xs.length - 1)) * cW;
+  const ysc = v => pad.t + cH - ((v - mn) / (mx - mn)) * cH;
+  ctx.strokeStyle = '#1A2540'; ctx.lineWidth = 0.5;
+  for (let g = 0; g <= 4; g++) { const y = pad.t + (g / 4) * cH; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke(); }
+  series.forEach(s => {
+    ctx.beginPath(); s.data.forEach((v, i) => i === 0 ? ctx.moveTo(xsc(i), ysc(v)) : ctx.lineTo(xsc(i), ysc(v)));
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.lineTo(xsc(s.data.length - 1), pad.t + cH); ctx.lineTo(pad.l, pad.t + cH); ctx.closePath();
+    ctx.fillStyle = s.color + '22'; ctx.fill();
+  });
+  ctx.fillStyle = '#445577'; ctx.font = '9px var(--font-mono, monospace)'; ctx.textAlign = 'right';
+  for (let g = 0; g <= 4; g++) { const v = mn + (1 - g / 4) * (mx - mn), y = pad.t + (g / 4) * cH; ctx.fillText(v.toFixed(v < .01 ? 5 : 2), pad.l - 4, y + 3); }
+  ctx.textAlign = 'center'; ctx.fillText('Epoch', pad.l + cW / 2, H - 4);
+  [1, 25, 50, 75, 100].forEach(e => { const xi = xs.indexOf(e); if (xi >= 0) ctx.fillText(e, xsc(xi), H - 12); });
+}
+
+// ── Source code files ─────────────────────────────────────────────
+const files = {
+train: { name: 'train.py', code: `<span class="cm"># PS12 · ISRO BAH 2026 — Temporal Super-Resolution</span>
+<span class="cm"># train.py — Main training script</span>
+<span class="kw">import</span> torch, argparse, yaml
+<span class="kw">from</span> torch.utils.data <span class="kw">import</span> DataLoader
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> model <span class="kw">import</span> <span class="fn">TemporalInterpolationNet</span>
+<span class="kw">from</span> dataset <span class="kw">import</span> <span class="fn">SatelliteFramePairDataset</span>
+<span class="kw">from</span> metrics <span class="kw">import</span> <span class="fn">SSIMLoss</span>, <span class="fn">compute_metrics</span>
+
+<span class="kw">def</span> <span class="fn">train_one_epoch</span>(model, loader, optimizer, cfg, device):
+    model.train()
+    total_loss = <span class="nm">0.0</span>
+    <span class="kw">for</span> batch <span class="kw">in</span> loader:
+        I0 = batch[<span class="st">'frame0'</span>].to(device)   <span class="cm"># T=00:00</span>
+        I1 = batch[<span class="st">'frame1'</span>].to(device)   <span class="cm"># T=00:20 (GOES-19)</span>
+        It = batch[<span class="st">'frame_t'</span>].to(device)  <span class="cm"># T=00:10 (ground truth)</span>
+        t  = batch[<span class="st">'t'</span>].to(device)        <span class="cm"># interpolation factor</span>
+
+        pred = model(I0, I1, t)
+
+        loss_l1   = torch.nn.L1Loss()(pred, It)
+        loss_ssim = <span class="fn">SSIMLoss</span>()(pred, It)
+        loss = (<span class="nm">0.84</span> * loss_l1
+              + <span class="nm">0.12</span> * loss_ssim)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+    <span class="kw">return</span> total_loss / len(loader)
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    cfg = yaml.safe_load(open(<span class="st">'config.yaml'</span>))
+    device = torch.device(<span class="st">'cuda'</span> <span class="kw">if</span> torch.cuda.is_available() <span class="kw">else</span> <span class="st">'cpu'</span>)
+
+    train_ds = <span class="fn">SatelliteFramePairDataset</span>(cfg[<span class="st">'data'</span>][<span class="st">'train_root'</span>], split=<span class="st">'train'</span>)
+    val_ds   = <span class="fn">SatelliteFramePairDataset</span>(cfg[<span class="st">'data'</span>][<span class="st">'train_root'</span>], split=<span class="st">'val'</span>)
+
+    train_loader = <span class="fn">DataLoader</span>(train_ds, batch_size=cfg[<span class="st">'train'</span>][<span class="st">'batch_size'</span>], shuffle=<span class="kw">True</span>,  num_workers=<span class="nm">4</span>)
+    val_loader   = <span class="fn">DataLoader</span>(val_ds,   batch_size=<span class="nm">4</span>,                               shuffle=<span class="kw">False</span>, num_workers=<span class="nm">2</span>)
+
+    model     = <span class="fn">TemporalInterpolationNet</span>(cfg).to(device)
+    optimizer = torch.optim.<span class="fn">AdamW</span>(model.parameters(), lr=cfg[<span class="st">'train'</span>][<span class="st">'lr'</span>])
+    scheduler = torch.optim.lr_scheduler.<span class="fn">CosineAnnealingLR</span>(optimizer, T_max=cfg[<span class="st">'train'</span>][<span class="st">'epochs'</span>])
+
+    best_ssim = <span class="nm">0.0</span>
+    <span class="kw">for</span> epoch <span class="kw">in</span> range(cfg[<span class="st">'train'</span>][<span class="st">'epochs'</span>]):
+        train_loss = <span class="fn">train_one_epoch</span>(model, train_loader, optimizer, cfg, device)
+        metrics    = <span class="fn">compute_metrics</span>(model, val_loader, device)
+        scheduler.step()
+
+        print(f<span class="st">"Epoch {epoch+1:03d} | Loss {train_loss:.4f} | SSIM {metrics['ssim']:.4f} | PSNR {metrics['psnr']:.2f} dB"</span>)
+
+        <span class="kw">if</span> metrics[<span class="st">'ssim'</span>] > best_ssim:
+            best_ssim = metrics[<span class="st">'ssim'</span>]
+            torch.save(model.state_dict(), <span class="st">'checkpoints/best_model.pth'</span>)
+            print(<span class="st">f"  ✓ Saved best model (SSIM={best_ssim:.4f})"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">'__main__'</span>:
+    <span class="fn">main</span>()`
+},
+model: { name: 'model.py', code: `<span class="cm"># model.py — Two-network interpolation architecture</span>
+<span class="cm"># Network 1: RAFT-based optical flow estimator</span>
+<span class="cm"># Network 2: U-Net frame synthesizer (Super SloMo style)</span>
+<span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn, torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="dc">ConvBlock</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, cin, cout, k=<span class="nm">3</span>, s=<span class="nm">1</span>):
+        super().<span class="fn">__init__</span>()
+        self.conv = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Conv2d</span>(cin, cout, k, s, k//<span class="nm">2</span>, bias=<span class="kw">False</span>),
+            nn.<span class="fn">BatchNorm2d</span>(cout),
+            nn.<span class="fn">LeakyReLU</span>(<span class="nm">0.1</span>, inplace=<span class="kw">True</span>))
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x): <span class="kw">return</span> self.conv(x)
+
+<span class="kw">class</span> <span class="dc">FlowEstimator</span>(nn.Module):
+    <span class="cm">"""RAFT-lite: feature pyramid + GRU update block."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, hidden=<span class="nm">64</span>):
+        super().<span class="fn">__init__</span>()
+        self.feat = nn.<span class="fn">Sequential</span>(
+            <span class="fn">ConvBlock</span>(<span class="nm">1</span>, hidden, k=<span class="nm">7</span>),
+            <span class="fn">ConvBlock</span>(hidden, hidden*<span class="nm">2</span>, s=<span class="nm">2</span>),
+            <span class="fn">ConvBlock</span>(hidden*<span class="nm">2</span>, hidden*<span class="nm">4</span>, s=<span class="nm">2</span>),
+            <span class="fn">ConvBlock</span>(hidden*<span class="nm">4</span>, hidden*<span class="nm">4</span>))
+        self.gru = nn.<span class="fn">ConvGRUCell</span>(hidden*<span class="nm">8</span>, hidden*<span class="nm">2</span>) <span class="kw">if</span> <span class="fn">hasattr</span>(nn, <span class="st">'ConvGRUCell'</span>) <span class="kw">else</span> <span class="kw">None</span>
+        self.flow_head = nn.<span class="fn">Conv2d</span>(hidden*<span class="nm">4</span>, <span class="nm">4</span>, <span class="nm">1</span>)  <span class="cm"># 2-ch F01 + 2-ch F10</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, I0, I1):
+        f0, f1 = self.<span class="fn">feat</span>(I0), self.<span class="fn">feat</span>(I1)
+        corr   = torch.<span class="fn">cat</span>([f0, f1], dim=<span class="nm">1</span>)
+        flow   = self.<span class="fn">flow_head</span>(corr)
+        flow   = F.<span class="fn">interpolate</span>(flow, size=I0.shape[<span class="nm">-2</span>:], mode=<span class="st">'bilinear'</span>, align_corners=<span class="kw">False</span>)
+        F01, F10 = flow[:, :<span class="nm">2</span>], flow[:, <span class="nm">2</span>:]
+        <span class="kw">return</span> F01, F10
+
+<span class="kw">class</span> <span class="dc">FrameSynthesizer</span>(nn.Module):
+    <span class="cm">"""U-Net that blends warped frames using visibility masks."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, hidden=<span class="nm">64</span>):
+        super().<span class="fn">__init__</span>()
+        <span class="cm"># Encoder</span>
+        self.enc = nn.<span class="fn">ModuleList</span>([<span class="fn">ConvBlock</span>(<span class="nm">6</span>, hidden), <span class="fn">ConvBlock</span>(hidden, hidden*<span class="nm">2</span>, s=<span class="nm">2</span>), <span class="fn">ConvBlock</span>(hidden*<span class="nm">2</span>, hidden*<span class="nm">4</span>, s=<span class="nm">2</span>)])
+        self.bot = <span class="fn">ConvBlock</span>(hidden*<span class="nm">4</span>, hidden*<span class="nm">4</span>)
+        <span class="cm"># Decoder with skip connections</span>
+        self.dec = nn.<span class="fn">ModuleList</span>([<span class="fn">ConvBlock</span>(hidden*<span class="nm">8</span>, hidden*<span class="nm">2</span>), <span class="fn">ConvBlock</span>(hidden*<span class="nm">4</span>, hidden), <span class="fn">ConvBlock</span>(hidden*<span class="nm">2</span>, hidden)])
+        self.out = nn.<span class="fn">Conv2d</span>(hidden, <span class="nm">3</span>, <span class="nm">1</span>)  <span class="cm"># Iₜ + V0 + V1</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, I0w, I1w, F01t, F10t):
+        x = torch.<span class="fn">cat</span>([I0w, I1w, F01t, F10t], dim=<span class="nm">1</span>)
+        skips = []; 
+        <span class="kw">for</span> layer <span class="kw">in</span> self.enc: x = layer(x); skips.<span class="fn">append</span>(x)
+        x = self.<span class="fn">bot</span>(x)
+        <span class="kw">for</span> i, layer <span class="kw">in</span> enumerate(self.dec):
+            x = F.<span class="fn">interpolate</span>(x, scale_factor=<span class="nm">2</span> <span class="kw">if</span> i > <span class="nm">0</span> <span class="kw">else</span> <span class="nm">1</span>, mode=<span class="st">'bilinear'</span>, align_corners=<span class="kw">False</span>)
+            x = layer(torch.<span class="fn">cat</span>([x, skips[<span class="nm">-1</span>-i]], dim=<span class="nm">1</span>))
+        out = self.<span class="fn">out</span>(x)
+        It, V0, V1 = out[:, :<span class="nm">1</span>], torch.<span class="fn">sigmoid</span>(out[:, <span class="nm">1</span>:<span class="nm">2</span>]), torch.<span class="fn">sigmoid</span>(out[:, <span class="nm">2</span>:])
+        <span class="kw">return</span> It, V0, V1
+
+<span class="kw">def</span> <span class="fn">warp</span>(frame, flow):
+    B, C, H, W = frame.shape
+    xx, yy = torch.<span class="fn">meshgrid</span>(torch.<span class="fn">arange</span>(W), torch.<span class="fn">arange</span>(H), indexing=<span class="st">'xy'</span>)
+    grid = torch.<span class="fn">stack</span>([xx, yy], dim=<span class="nm">0</span>).<span class="fn">float</span>().<span class="fn">unsqueeze</span>(<span class="nm">0</span>).to(frame.device)
+    grid = grid + flow
+    grid[:, <span class="nm">0</span>] = <span class="nm">2.0</span> * grid[:, <span class="nm">0</span>] / (W - <span class="nm">1</span>) - <span class="nm">1.0</span>
+    grid[:, <span class="nm">1</span>] = <span class="nm">2.0</span> * grid[:, <span class="nm">1</span>] / (H - <span class="nm">1</span>) - <span class="nm">1.0</span>
+    <span class="kw">return</span> F.<span class="fn">grid_sample</span>(frame, grid.<span class="fn">permute</span>(<span class="nm">0</span>,<span class="nm">2</span>,<span class="nm">3</span>,<span class="nm">1</span>), align_corners=<span class="kw">True</span>, padding_mode=<span class="st">'border'</span>)
+
+<span class="kw">class</span> <span class="dc">TemporalInterpolationNet</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, cfg):
+        super().<span class="fn">__init__</span>()
+        h = cfg[<span class="st">'model'</span>][<span class="st">'hidden_channels'</span>]
+        self.flow_net  = <span class="fn">FlowEstimator</span>(h)
+        self.synth_net = <span class="fn">FrameSynthesizer</span>(h)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, I0, I1, t):
+        <span class="cm"># 1. Estimate bi-directional optical flow</span>
+        F01, F10 = self.flow_net(I0, I1)
+        <span class="cm"># 2. Scale flows to interpolation time t</span>
+        F01t = -t * F01; F10t = -(<span class="nm">1</span> - t) * F10
+        <span class="cm"># 3. Warp both frames to time t</span>
+        I0w = <span class="fn">warp</span>(I0, F01t); I1w = <span class="fn">warp</span>(I1, F10t)
+        <span class="cm"># 4. Synthesize final frame with visibility masks</span>
+        It_raw, V0, V1 = self.synth_net(I0w, I1w, F01t, F10t)
+        <span class="cm"># 5. Blend with visibility-weighted average</span>
+        norm = (<span class="nm">1</span> - t) * V0 + t * V1 + <span class="nm">1e-6</span>
+        It = ((<span class="nm">1</span> - t) * V0 * I0w + t * V1 * I1w) / norm
+        <span class="kw">return</span> It + It_raw * <span class="nm">0.15</span>  <span class="cm"># residual refinement</span>`
+},
+dataset: { name: 'dataset.py', code: `<span class="cm"># dataset.py — GOES-19 & INSAT-3DS data loading</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np, h5py, netCDF4 <span class="kw">as</span> nc
+<span class="kw">import</span> torch
+<span class="kw">from</span> torch.utils.data <span class="kw">import</span> Dataset
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> typing <span class="kw">import</span> Tuple, Optional
+
+<span class="kw">class</span> <span class="dc">SatelliteFramePairDataset</span>(Dataset):
+    <span class="cm">"""
+    Loads frame triplets (I0, It, I1) from GOES-19 ABI Channel 13.
+    I0: T, It: T+10min (hidden GT), I1: T+20min
+    For INSAT-3DS inference: pairs are T and T+30min.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, root: str, split: str = <span class="st">'train'</span>, patch: int = <span class="nm">256</span>):
+        self.root  = Path(root)
+        self.patch = patch
+        self.files = <span class="fn">sorted</span>(self.root.<span class="fn">glob</span>(<span class="st">'**/*.nc'</span>))
+        n = <span class="fn">len</span>(self.files)
+        val_start = <span class="fn">int</span>(n * <span class="nm">0.95</span>)
+        self.files = self.files[:<span class="nm">val_start</span>] <span class="kw">if</span> split == <span class="st">'train'</span> <span class="kw">else</span> self.files[val_start:]
+
+    <span class="kw">def</span> <span class="fn">__len__</span>(self) -> int: <span class="kw">return</span> <span class="fn">len</span>(self.files) - <span class="nm">2</span>
+
+    <span class="kw">def</span> <span class="fn">load_tir</span>(self, path: Path) -> np.ndarray:
+        <span class="cm"># GOES-19 ABI Channel 13 — 11.2 µm TIR</span>
+        ds = nc.<span class="fn">Dataset</span>(path)
+        rad = ds.variables[<span class="st">'Rad'</span>][:<span class="nm"></span>].astype(np.float32)
+        <span class="cm"># Convert radiance → brightness temperature (Planck inversion)</span>
+        fk1 = ds.variables[<span class="st">'planck_fk1'</span>][:<span class="nm"></span>]
+        fk2 = ds.variables[<span class="st">'planck_fk2'</span>][:<span class="nm"></span>]
+        bc1 = ds.variables[<span class="st">'planck_bc1'</span>][:<span class="nm"></span>]
+        bc2 = ds.variables[<span class="st">'planck_bc2'</span>][:<span class="nm"></span>]
+        bt = (fk2 / (np.<span class="fn">log</span>(fk1 / rad + <span class="nm">1</span>) - bc1)) / bc2
+        <span class="cm"># Normalise to [0, 1] (typical BT range 180–320 K)</span>
+        bt = (bt - <span class="nm">180.0</span>) / (<span class="nm">320.0</span> - <span class="nm">180.0</span>)
+        <span class="kw">return</span> np.<span class="fn">clip</span>(bt, <span class="nm">0</span>, <span class="nm">1</span>)
+
+    <span class="kw">def</span> <span class="fn">random_crop</span>(self, *arrays) -> Tuple:
+        H, W = arrays[<span class="nm">0</span>].shape
+        y = np.random.<span class="fn">randint</span>(<span class="nm">0</span>, H - self.patch)
+        x = np.random.<span class="fn">randint</span>(<span class="nm">0</span>, W - self.patch)
+        <span class="kw">return</span> <span class="fn">tuple</span>(a[y:y+self.patch, x:x+self.patch] <span class="kw">for</span> a <span class="kw">in</span> arrays)
+
+    <span class="kw">def</span> <span class="fn">__getitem__</span>(self, idx: int) -> dict:
+        f0 = self.<span class="fn">load_tir</span>(self.files[idx])
+        ft = self.<span class="fn">load_tir</span>(self.files[idx + <span class="nm">1</span>])  <span class="cm"># T+10 (hidden GT)</span>
+        f1 = self.<span class="fn">load_tir</span>(self.files[idx + <span class="nm">2</span>])  <span class="cm"># T+20</span>
+        f0, ft, f1 = self.<span class="fn">random_crop</span>(f0, ft, f1)
+        <span class="cm"># Random horizontal flip augmentation</span>
+        <span class="kw">if</span> np.random.<span class="fn">rand</span>() > <span class="nm">0.5</span>: f0, ft, f1 = np.<span class="fn">fliplr</span>(f0), np.<span class="fn">fliplr</span>(ft), np.<span class="fn">fliplr</span>(f1)
+        <span class="kw">def</span> <span class="fn">to_t</span>(a): <span class="kw">return</span> torch.<span class="fn">from_numpy</span>(a.<span class="fn">copy</span>()).<span class="fn">unsqueeze</span>(<span class="nm">0</span>).<span class="fn">float</span>()
+        <span class="kw">return</span> {<span class="st">'frame0'</span>: <span class="fn">to_t</span>(f0), <span class="st">'frame_t'</span>: <span class="fn">to_t</span>(ft), <span class="st">'frame1'</span>: <span class="fn">to_t</span>(f1), <span class="st">'t'</span>: torch.<span class="fn">tensor</span>([<span class="nm">0.5</span>])}
+
+<span class="kw">class</span> <span class="dc">INSAT3DSDataset</span>(Dataset):
+    <span class="cm">"""Loads INSAT-3DS TIR1 .h5 files from MOSDAC for inference."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, root: str):
+        self.files = <span class="fn">sorted</span>(Path(root).<span class="fn">glob</span>(<span class="st">'3SIMG*_TIR1*.h5'</span>))
+
+    <span class="kw">def</span> <span class="fn">__len__</span>(self): <span class="kw">return</span> <span class="fn">len</span>(self.files) - <span class="nm">1</span>
+
+    <span class="kw">def</span> <span class="fn">__getitem__</span>(self, idx):
+        <span class="kw">def</span> <span class="fn">read_h5</span>(p):
+            <span class="kw">with</span> h5py.<span class="fn">File</span>(p, <span class="st">'r'</span>) <span class="kw">as</span> f:
+                bt = f[<span class="st">'IMG_TIR1'</span>][:<span class="nm"></span>].<span class="fn">astype</span>(np.float32)
+            <span class="kw">return</span> torch.<span class="fn">from_numpy</span>((bt - <span class="nm">180</span>) / <span class="nm">140</span>).<span class="fn">clamp</span>(<span class="nm">0</span>, <span class="nm">1</span>).<span class="fn">unsqueeze</span>(<span class="nm">0</span>)
+        <span class="kw">return</span> {<span class="st">'frame0'</span>: <span class="fn">read_h5</span>(self.files[idx]), <span class="st">'frame1'</span>: <span class="fn">read_h5</span>(self.files[idx+<span class="nm">1</span>]),
+                <span class="st">'path0'</span>: <span class="fn">str</span>(self.files[idx]), <span class="st">'t'</span>: torch.<span class="fn">tensor</span>([<span class="nm">0.5</span>])}`
+},
+infer: { name: 'infer.py', code: `<span class="cm"># infer.py — Run inference on INSAT-3DS, save synthetic frames</span>
+<span class="kw">import</span> torch, h5py, numpy <span class="kw">as</span> np, yaml
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> tqdm <span class="kw">import</span> tqdm
+<span class="kw">from</span> model <span class="kw">import</span> <span class="fn">TemporalInterpolationNet</span>
+<span class="kw">from</span> dataset <span class="kw">import</span> <span class="fn">INSAT3DSDataset</span>
+<span class="kw">from</span> metrics <span class="kw">import</span> <span class="fn">compute_metrics_pair</span>
+
+<span class="kw">def</span> <span class="fn">interpolate_pair</span>(model, I0, I1, t=<span class="nm">0.5</span>, device=<span class="st">'cpu'</span>):
+    <span class="cm">"""Generate one synthetic frame between I0 and I1."""</span>
+    model.eval()
+    <span class="kw">with</span> torch.no_grad():
+        I0t = I0.<span class="fn">unsqueeze</span>(<span class="nm">0</span>).to(device)
+        I1t = I1.<span class="fn">unsqueeze</span>(<span class="nm">0</span>).to(device)
+        tv  = torch.<span class="fn">tensor</span>([[t]], device=device)
+        It  = model(I0t, I1t, tv)
+    <span class="kw">return</span> It.<span class="fn">squeeze</span>(<span class="nm">0</span>).<span class="fn">cpu</span>()
+
+<span class="kw">def</span> <span class="fn">save_as_h5</span>(frame: np.ndarray, path: str, source_meta: dict):
+    <span class="cm">"""Save synthetic frame in INSAT-3DS TIR1 .h5 format."""</span>
+    bt = (frame * <span class="nm">140.0</span> + <span class="nm">180.0</span>).<span class="fn">astype</span>(np.float32)
+    <span class="kw">with</span> h5py.<span class="fn">File</span>(path, <span class="st">'w'</span>) <span class="kw">as</span> f:
+        ds = f.<span class="fn">create_dataset</span>(<span class="st">'IMG_TIR1'</span>, data=bt, compression=<span class="st">'gzip'</span>)
+        ds.attrs[<span class="st">'long_name'</span>]    = <span class="st">'AI-Synthesized TIR1 Brightness Temperature'</span>
+        ds.attrs[<span class="st">'units'</span>]        = <span class="st">'K'</span>
+        ds.attrs[<span class="st">'valid_range'</span>]  = [<span class="nm">180.0</span>, <span class="nm">320.0</span>]
+        ds.attrs[<span class="st">'source'</span>]       = <span class="st">'PS12-ISRO-BAH2026 temporal interpolation'</span>
+        ds.attrs[<span class="st">'generated_by'</span>] = <span class="st">'TemporalInterpolationNet (RAFT+UNet)'</span>
+        ds.attrs[<span class="st">'t_factor'</span>]     = source_meta.get(<span class="st">'t'</span>, <span class="nm">0.5</span>)
+        <span class="kw">for</span> k, v <span class="kw">in</span> source_meta.items(): f.attrs[k] = v
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    cfg = yaml.safe_load(<span class="fn">open</span>(<span class="st">'config.yaml'</span>))
+    device = torch.device(<span class="st">'cuda'</span> <span class="kw">if</span> torch.cuda.is_available() <span class="kw">else</span> <span class="st">'cpu'</span>)
+
+    model = <span class="fn">TemporalInterpolationNet</span>(cfg).to(device)
+    ckpt  = torch.<span class="fn">load</span>(<span class="st">'checkpoints/best_model.pth'</span>, map_location=device)
+    model.<span class="fn">load_state_dict</span>(ckpt)
+
+    ds      = <span class="fn">INSAT3DSDataset</span>(cfg[<span class="st">'data'</span>][<span class="st">'insat_root'</span>])
+    out_dir = Path(cfg[<span class="st">'output'</span>][<span class="st">'dir'</span>]); out_dir.<span class="fn">mkdir</span>(parents=<span class="kw">True</span>, exist_ok=<span class="kw">True</span>)
+
+    results = []
+    <span class="kw">for</span> idx, batch <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="fn">tqdm</span>(ds, desc=<span class="st">'Interpolating INSAT-3DS'</span>)):
+        I0, I1 = batch[<span class="st">'frame0'</span>], batch[<span class="st">'frame1'</span>]
+        It = <span class="fn">interpolate_pair</span>(model, I0, I1, t=<span class="nm">0.5</span>, device=device)
+        out_path = out_dir / f<span class="st">"3SIMG_AI_TIR1_{idx:05d}_T+15min.h5"</span>
+        <span class="fn">save_as_h5</span>(It.<span class="fn">numpy</span>()[<span class="nm">0</span>], <span class="fn">str</span>(out_path), {<span class="st">'source_frame0'</span>: batch[<span class="st">'path0'</span>], <span class="st">'t'</span>: <span class="nm">0.5</span>})
+        results.<span class="fn">append</span>(out_path)
+    
+    print(f<span class="st">f"✓ Generated {len(results)} synthetic frames → {out_dir}"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">'__main__'</span>: <span class="fn">main</span>()`
+},
+metrics: { name: 'metrics.py', code: `<span class="cm"># metrics.py — Validation metrics: SSIM, PSNR, MSE, FSIM</span>
+<span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn, numpy <span class="kw">as</span> np
+
+<span class="kw">class</span> <span class="dc">SSIMLoss</span>(nn.Module):
+    <span class="cm">"""Differentiable SSIM loss (used during training)."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, window=<span class="nm">11</span>, sigma=<span class="nm">1.5</span>):
+        super().<span class="fn">__init__</span>()
+        g = torch.<span class="fn">arange</span>(window).<span class="fn">float</span>() - window // <span class="nm">2</span>
+        gauss = torch.<span class="fn">exp</span>(-(g ** <span class="nm">2</span>) / (<span class="nm">2</span> * sigma ** <span class="nm">2</span>))
+        kernel = gauss[:, <span class="kw">None</span>] * gauss[<span class="kw">None</span>, :]
+        self.<span class="fn">register_buffer</span>(<span class="st">'kernel'</span>, kernel / kernel.<span class="fn">sum</span>().<span class="fn">view</span>(<span class="nm">1</span>,<span class="nm">1</span>,<span class="nm">1</span>,<span class="nm">-1</span>).<span class="fn">expand</span>(<span class="nm">1</span>,<span class="nm">1</span>,window,window))
+        self.pad = window // <span class="nm">2</span>; self.C1 = <span class="nm">0.01</span>**<span class="nm">2</span>; self.C2 = <span class="nm">0.03</span>**<span class="nm">2</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, y):
+        <span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+        mu_x  = F.<span class="fn">conv2d</span>(x, self.kernel, padding=self.pad)
+        mu_y  = F.<span class="fn">conv2d</span>(y, self.kernel, padding=self.pad)
+        sig_x = F.<span class="fn">conv2d</span>(x*x, self.kernel, padding=self.pad) - mu_x**<span class="nm">2</span>
+        sig_y = F.<span class="fn">conv2d</span>(y*y, self.kernel, padding=self.pad) - mu_y**<span class="nm">2</span>
+        sig   = F.<span class="fn">conv2d</span>(x*y, self.kernel, padding=self.pad) - mu_x*mu_y
+        ssim  = ((<span class="nm">2</span>*mu_x*mu_y+self.C1)*(<span class="nm">2</span>*sig+self.C2)) / ((mu_x**<span class="nm">2</span>+mu_y**<span class="nm">2</span>+self.C1)*(sig_x+sig_y+self.C2))
+        <span class="kw">return</span> <span class="nm">1</span> - ssim.<span class="fn">mean</span>()
+
+<span class="kw">def</span> <span class="fn">psnr</span>(pred, gt, max_val=<span class="nm">1.0</span>):
+    mse = torch.<span class="fn">mean</span>((pred - gt)**<span class="nm">2</span>)
+    <span class="kw">return</span> (<span class="nm">10</span> * torch.<span class="fn">log10</span>(max_val**<span class="nm">2</span> / mse)).<span class="fn">item</span>()
+
+<span class="kw">def</span> <span class="fn">ssim_metric</span>(pred, gt):
+    <span class="kw">return</span> (<span class="nm">1</span> - <span class="fn">SSIMLoss</span>()(pred, gt)).<span class="fn">item</span>()
+
+<span class="kw">def</span> <span class="fn">compute_metrics</span>(model, loader, device):
+    model.eval(); ssim_vals, psnr_vals, mse_vals = [], [], []
+    <span class="kw">with</span> torch.no_grad():
+        <span class="kw">for</span> batch <span class="kw">in</span> loader:
+            I0 = batch[<span class="st">'frame0'</span>].to(device)
+            I1 = batch[<span class="st">'frame1'</span>].to(device)
+            It = batch[<span class="st">'frame_t'</span>].to(device)
+            t  = batch[<span class="st">'t'</span>].to(device)
+            pred = model(I0, I1, t)
+            ssim_vals.<span class="fn">append</span>(<span class="fn">ssim_metric</span>(pred, It))
+            psnr_vals.<span class="fn">append</span>(<span class="fn">psnr</span>(pred, It))
+            mse_vals.<span class="fn">append</span>(torch.<span class="fn">mean</span>((pred - It)**<span class="nm">2</span>).<span class="fn">item</span>())
+    <span class="kw">return</span> {<span class="st">'ssim'</span>: np.<span class="fn">mean</span>(ssim_vals), <span class="st">'psnr'</span>: np.<span class="fn">mean</span>(psnr_vals), <span class="st">'mse'</span>: np.<span class="fn">mean</span>(mse_vals)}`
+},
+config: { name: 'config.yaml', code: `<span class="cm"># config.yaml — PS12 · ISRO BAH 2026 project configuration</span>
+
+<span class="dc">model</span><span class="op">:</span>
+  <span class="fn">name</span><span class="op">:</span>            <span class="st">TemporalInterpolationNet</span>
+  <span class="fn">hidden_channels</span><span class="op">:</span> <span class="nm">64</span>
+  <span class="fn">flow_iterations</span><span class="op">:</span> <span class="nm">4</span>          <span class="cm"># RAFT GRU update iterations</span>
+  <span class="fn">unet_scales</span><span class="op">:</span>     <span class="nm">5</span>
+
+<span class="dc">train</span><span class="op">:</span>
+  <span class="fn">epochs</span><span class="op">:</span>          <span class="nm">100</span>
+  <span class="fn">batch_size</span><span class="op">:</span>      <span class="nm">8</span>
+  <span class="fn">lr</span><span class="op">:</span>              <span class="nm">1e-4</span>
+  <span class="fn">lr_schedule</span><span class="op">:</span>    CosineAnnealingLR
+  <span class="fn">loss_l1</span><span class="op">:</span>         <span class="nm">0.84</span>
+  <span class="fn">loss_ssim</span><span class="op">:</span>       <span class="nm">0.12</span>
+  <span class="fn">loss_perceptual</span><span class="op">:</span> <span class="nm">0.04</span>
+  <span class="fn">patch_size</span><span class="op">:</span>      <span class="nm">256</span>
+  <span class="fn">seed</span><span class="op">:</span>            <span class="nm">42</span>
+
+<span class="dc">data</span><span class="op">:</span>
+  <span class="cm"># GOES-19 ABI Channel 13 (training ground truth)</span>
+  <span class="fn">train_root</span><span class="op">:</span>     <span class="st">/data/GOES19/ABI-L1b-RadC/</span>
+  <span class="cm"># INSAT-3DS TIR1 (inference target)</span>
+  <span class="fn">insat_root</span><span class="op">:</span>     <span class="st">/data/INSAT3DS/TIR1/</span>
+  <span class="fn">val_split</span><span class="op">:</span>      <span class="nm">0.05</span>
+
+<span class="dc">output</span><span class="op">:</span>
+  <span class="fn">dir</span><span class="op">:</span>            <span class="st">./outputs/synthetic_frames/</span>
+  <span class="fn">checkpoint_dir</span><span class="op">:</span> <span class="st">./checkpoints/</span>
+  <span class="fn">log_dir</span><span class="op">:</span>        <span class="st">./logs/</span>
+
+<span class="dc">dashboard</span><span class="op">:</span>
+  <span class="fn">port</span><span class="op">:</span>           <span class="nm">8050</span>
+  <span class="fn">host</span><span class="op">:</span>           <span class="st">0.0.0.0</span>`
+},
+requirements: { name: 'requirements.txt', code: `<span class="cm"># PS12 · ISRO BAH 2026 — Python dependencies</span>
+<span class="cm"># Install: pip install -r requirements.txt</span>
+
+<span class="cm"># ── Deep learning ────────────────────────────────────────────</span>
+torch<span class="op">>=</span><span class="nm">2.1.0</span>
+torchvision<span class="op">>=</span><span class="nm">0.16.0</span>
+
+<span class="cm"># ── Satellite data I/O ───────────────────────────────────────</span>
+netCDF4<span class="op">>=</span><span class="nm">1.6.4</span>            <span class="cm"># GOES-19 .nc files</span>
+h5py<span class="op">>=</span><span class="nm">3.9.0</span>               <span class="cm"># INSAT-3DS .h5 files</span>
+satpy<span class="op">>=</span><span class="nm">0.45.0</span>             <span class="cm"># Satellite data processing</span>
+pyresample<span class="op">>=</span><span class="nm">1.28.0</span>        <span class="cm"># Reprojection</span>
+trollimage<span class="op">>=</span><span class="nm">1.22.0</span>        <span class="cm"># PyTroll image handling</span>
+boto3<span class="op">>=</span><span class="nm">1.28.0</span>             <span class="cm"># AWS S3 GOES-19 access</span>
+
+<span class="cm"># ── Numerical / scientific ───────────────────────────────────</span>
+numpy<span class="op">>=</span><span class="nm">1.26.0</span>
+scipy<span class="op">>=</span><span class="nm">1.11.0</span>
+scikit-image<span class="op">>=</span><span class="nm">0.21.0</span>     <span class="cm"># SSIM, PSNR reference</span>
+
+<span class="cm"># ── Dashboard ────────────────────────────────────────────────</span>
+dash<span class="op">>=</span><span class="nm">2.14.0</span>               <span class="cm"># Plotly Dash web dashboard</span>
+plotly<span class="op">>=</span><span class="nm">5.17.0</span>
+flask<span class="op">>=</span><span class="nm">3.0.0</span>
+
+<span class="cm"># ── Utilities ────────────────────────────────────────────────</span>
+tqdm<span class="op">>=</span><span class="nm">4.66.0</span>
+pyyaml<span class="op">>=</span><span class="nm">6.0.1</span>
+matplotlib<span class="op">>=</span><span class="nm">3.8.0</span>
+Pillow<span class="op">>=</span><span class="nm">10.0.0</span>`
+}
+};
+
+function showFile(key, navEl) {
+  const f = files[key]; if (!f) return;
+  document.getElementById('code-filename').textContent = f.name;
+  document.getElementById('code-block').innerHTML = f.code;
+  if (navEl) { document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active')); navEl.classList.add('active'); }
+}
+
+function copyCode() {
+  const text = document.getElementById('code-block').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('✓ Code copied to clipboard', true));
+}
+
+function toggleTheme() { document.body.style.filter = document.body.style.filter ? '' : 'invert(1) hue-rotate(180deg)'; }
+
+// ── Boot ─────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildTimeline();
+  showFile('train', null);
+  setTimeout(() => { render(); buildTrainingCharts(); }, 80);
+});
+window.addEventListener('resize', () => { if (S.tab === 'tab-viewer' || S.tab === 'tab-flow') render(); });
+</script>
+</body>
+</html>
