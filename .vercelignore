@@ -1,0 +1,5 @@
+# Vercel: ignore Python backend — this is a static HTML deployment
+backend/
+model/
+config.yaml
+requirements.txt
