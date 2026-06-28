@@ -7,14 +7,29 @@
 
 ## 🛰 Live Interactive Dashboard
 
-> **[▶ Open Dashboard](https://claude.site/artifacts/8cb0d3e2-d3d6-4b5e-9c9e-02c99b1b9562)** — fully interactive, runs in browser, no install needed.
+> **[▶ Open Dashboard](https://insat3ds-dashboard.vercel.app)** — fully interactive, runs in browser, no install needed.
 
-The dashboard includes:
-- **Side-by-side viewer** — original 30-min INSAT-3DS frames vs. AI-interpolated 15-min frames, animated
-- **Optical flow tab** — live vector field showing cloud motion estimated by the model
-- **Training curves** — loss, SSIM, PSNR, learning rate over 100 epochs
-- **Source code browser** — all project files with syntax highlighting, in-browser
-- **Config panel** — full hyperparameter table
+| Feature | Description |
+|---------|-------------|
+| 🖥 Side-by-side viewer | Original 30-min vs. AI-interpolated 15-min frames, animated |
+| 🌀 Optical flow | Live vector field showing cloud motion estimated by the model |
+| 📈 Training curves | Loss, SSIM, PSNR, learning rate over 100 epochs |
+| 🗂 Source code browser | All project files with syntax highlighting, in-browser |
+| ⚙ Config panel | Full hyperparameter and dataset configuration table |
+
+---
+
+## Deploy your own (Vercel — free, 1 click)
+
+This dashboard is a **pure static HTML file** — no server, no Python, no build step.
+
+1. Fork this repo
+2. Go to [vercel.com/new](https://vercel.com/new) → Import the fork
+3. Vercel auto-detects `vercel.json` and deploys `frontend/index.html`
+4. Done — you get a public URL instantly
+
+> The `vercel.json` and `.vercelignore` in this repo are pre-configured.  
+> The Python backend (`backend/`, `model/`, `requirements.txt`) is for **local training only** — Vercel ignores it.
 
 ---
 
@@ -32,12 +47,14 @@ ps12-dashboard/
 ├── model/
 │   └── model.py            ← Two-network architecture (FlowEstimator + FrameSynthesizer)
 ├── config.yaml             ← All hyperparameters and paths
-└── requirements.txt        ← Python dependencies
+├── requirements.txt        ← Python dependencies (training only)
+├── vercel.json             ← Static deployment config
+└── .vercelignore           ← Excludes Python backend from Vercel build
 ```
 
 ---
 
-## Quickstart
+## Quickstart (local training)
 
 ### 1. Install dependencies
 ```bash
@@ -46,7 +63,7 @@ pip install -r requirements.txt
 
 ### 2. Get training data (GOES-19)
 ```bash
-# AWS S3 bucket — no credentials needed (public)
+# AWS S3 — public bucket, no credentials needed
 aws s3 sync s3://noaa-goes19/ABI-L1b-RadC/ /data/GOES19/ABI-L1b-RadC/ \
     --no-sign-request \
     --exclude "*" \
@@ -72,27 +89,24 @@ data:
 ```bash
 python backend/train.py --config config.yaml
 # Checkpoints → ./checkpoints/best_model.pth
-# Logs        → ./logs/  (view with: tensorboard --logdir logs)
+# TensorBoard → tensorboard --logdir logs/
 ```
 
 ### 6. Run inference on INSAT-3DS
 ```bash
-# Generate 15-min frames (t=0.5)
+# 15-min frames (one synthetic frame per 30-min pair)
 python backend/infer.py --config config.yaml --t-factors 0.5
 
-# Generate 7.5-min frames (3 frames per pair)
+# 7.5-min frames (three synthetic frames per pair)
 python backend/infer.py --config config.yaml --t-factors 0.25 0.5 0.75
 
 # Output: ./outputs/synthetic_frames/3SIMG_AI_*_TIR1_*.h5
 ```
 
-### 7. Open the dashboard
+### 7. Open the dashboard locally
 ```bash
-# Option A: open frontend/index.html directly in any browser (no server needed)
-open frontend/index.html
-
-# Option B: use the hosted version
-# https://claude.site/artifacts/8cb0d3e2-d3d6-4b5e-9c9e-02c99b1b9562
+open frontend/index.html   # macOS
+# or just double-click it — works in any browser, no server needed
 ```
 
 ---
@@ -115,11 +129,11 @@ I₁ (T=00:30) ──┘                                       └── warp(I�
 - Backward-warps I₀ and I₁ to time t using scaled flow
 - Predicts per-pixel visibility masks V₀, V₁ (occlusion handling)
 - U-Net refinement with skip connections
-- Final blend: Iₜ = ((1-t)·V₀·I₀ᵥᵥ + t·V₁·I₁ᵥᵥ) / ((1-t)·V₀ + t·V₁)
+- Final blend: Iₜ = ((1-t)·V₀·I₀w + t·V₁·I₁w) / ((1-t)·V₀ + t·V₁)
 
 **Loss function**
 ```
-L = 0.84 × L1 + 0.12 × (1 - SSIM) + 0.04 × Perceptual
+L = 0.84 × L1 + 0.12 × (1 − SSIM) + 0.04 × Perceptual
 ```
 
 ---
@@ -146,8 +160,6 @@ L = 0.84 × L1 + 0.12 × (1 - SSIM) + 0.04 × Perceptual
 | Projection      | GOES-East FD       | Indian region      |
 | Data format     | NetCDF4 (.nc)      | HDF5 (.h5)         |
 
-The model is trained on GOES-19 (abundant 10-min ground truth) and fine-tuned / applied to INSAT-3DS. The spectral overlap (both TIR ~11 µm) makes domain transfer viable; spatial resolution difference is handled by working in pixel space after normalisation.
-
 ---
 
 ## Citation
@@ -155,4 +167,5 @@ The model is trained on GOES-19 (abundant 10-min ground truth) and fine-tuned / 
 PS12 · ISRO Bharatiya Antariksh Hackathon 2026
 Temporal Super-Resolution of INSAT-3DS TIR1 Imagery
 Using Optical Flow Frame Interpolation
+GitHub: https://github.com/Apurba-06/INSAT3DS-Temporal-SuperResolution
 ```
